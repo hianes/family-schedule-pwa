@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👨‍👩‍👧‍👦 가족 시간표 - 실시간 동기화</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="우리 가족의 시간표 - Google Sheets와 실시간 동기화, 4등분 고정 레이아웃">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="가족시간표">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    
+    <!-- Favicon & App Icons -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iIzIxOTZGMyIvPgo8cGF0aCBkPSJNOCAzaDJWMWgydjJoNFYxaDJ2Mmg0VjFoMnYyaDJjMS4xIDAgMi45IDIgLjkgMkwyNCAxM3Y3YzAgMS4xLS45IDItMiAySDEwYy0xLjEgMC0yLS45LTItMlYxM2MwLTEuMS45LTItMi0yem0wIDEySDEwdjhoMTJWMTN6IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iMjAiIGZpbGw9IiMyMTk2RjMiLz4KPHN2ZyB4PSI0NSIgeT0iNDUiIHdpZHRoPSI5MCIgaGVpZ2h0PSI5MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0xOSAzaC0xVjFoLTJ2Mkg4VjFINnYySDVjLTEuMTEgMC0xLjk5Ljg5LTEuOTkgMkwzIDVWMTljMCAxLjEuODkgMiAyIDJoMTRjMS4xIDAgMi0uOSAyLTJWNWMwLTEuMTEtLjg5LTItMi0yem0wIDE2SDVWOGgxNHYxMXoiLz4KPC9zdmc+Cjwvc3ZnPg==">
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            margin: 0;
+            padding-top: 50px;
+            background: #f8f9fa;
+        }
+        
+        .status-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #2196f3;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .status-text {
+            font-weight: 500;
+        }
+        
+        .refresh-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .status-success { color: #4caf50; }
+        .status-error { color: #f44336; }
+        .status-warning { color: #ff9800; }
+        
+        .container {
+            margin: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .week-info {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .week-navigation {
+            display: flex !important; /* 강제 표시 */
+            gap: 10px;
+            align-items: center;
+            visibility: visible !important; /* 강제 표시 */
+            opacity: 1 !important; /* 강제 표시 */
+        }
+        
+        .week-nav-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .week-nav-btn:hover {
+            background: #1976d2;
+        }
+        
+        .week-nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .current-week {
+            font-weight: bold;
+            color: #2196f3;
+        }
+        
+        .memo-guide {
+            background: #e8f4fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .memo-guide h3 {
+            margin: 0 0 15px 0;
+            color: #1976d2;
+            font-size: 16px;
+        }
+        
+        .member-memo {
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.7);
+            padding: 10px;
+            border-radius: 6px;
+        }
+        
+        .memo-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        
+        .member-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .memo-content {
+            font-size: 12px;
+            color: #555;
+            padding-left: 28px;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+        
+        .timetable {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+        
+        th {
+            background: #f1f3f4;
+            padding: 8px 4px;
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 12px;
+        }
+        
+        .time-col {
+            background: #fafafa;
+            width: 70px;
+            font-weight: 500;
+            color: #666;
+            text-align: center;
+            font-size: 10px;
+            padding: 2px;
+        }
+        
+        td {
+            padding: 0;
+            border: 1px solid #e8e8e8;
+            height: 20px;
+            vertical-align: middle;
+            position: relative;
+        }
+        
+        .time-slot {
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .empty-slot {
+            position: absolute;
+            height: calc(100% - 1px);
+            top: 0.5px;
+        }
+        
+        .event-bar {
+            position: absolute;
+            height: calc(100% + 2px);
+            top: -1px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 500;
+            color: white;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+            z-index: 20;
+            overflow: hidden;
+            white-space: nowrap;
+            box-sizing: border-box;
+        }
+        
+        .dad-bar { background: linear-gradient(135deg, #D6E3FF, #C2D2FF); color: black; }
+        .mom-bar { background: linear-gradient(135deg, #FFD6ED, #FFC2E0); color: black; }
+        .child1-bar { background: linear-gradient(135deg, #D6ECFF, #C2E0FF); color: black; }
+        .child2-bar { background: linear-gradient(135deg, #E8F5D2, #D4E8B8); color: black; }
+        
+        .family-common {
+            background: linear-gradient(135deg, #FFF3C4, #FFECB3) !important;
+            color: black;
+        }
+        
+        .multi-participant {
+            background: linear-gradient(135deg, #FFE4B5, #FFDAB9) !important;
+            color: black;
+            border: 1px solid #FFB366;
+        }
+        
+        .bar-start { 
+            border-top-left-radius: 8px; 
+            border-top-right-radius: 8px; 
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        .bar-middle { 
+            border-radius: 0; 
+        }
+        .bar-end { 
+            border-bottom-left-radius: 8px; 
+            border-bottom-right-radius: 8px; 
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+        .bar-single { 
+            border-radius: 8px; 
+        }
+        
+        .event-text,
+        .large-text {
+            display: block;
+        }
+        
+        .large-text {
+            display: flex !important;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .color-box {
+            width: 20px;
+            height: 12px;
+            border-radius: 6px;
+        }
+        
+        .hour-line {
+            border-top: 2px solid #ddd;
+        }
+        
+        .export-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #666;
+            text-align: center;
+        }
+        
+        .event-text {
+            color: black !important;
+            font-weight: 600;
+            font-size: 9px;
+            padding: 1px 3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-shadow: 0 0 2px rgba(255,255,255,0.6);
+        }
+        
+        .large-text {
+            color: black !important;
+            text-shadow: 0 0 3px rgba(255,255,255,0.8) !important;
+            white-space: normal !important;
+            text-align: center !important;
+            line-height: 1.1 !important;
+            font-weight: 700 !important;
+            word-break: keep-all !important;
+            overflow-wrap: break-word !important;
+            padding: 1px 2px !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 100% !important;
+        }
+        
+        @media (max-width: 768px) {
+            table { font-size: 9px; }
+            td { height: 18px; }
+            .event-bar { font-size: 8px; }
+        }
+        
+        /* 📱 PWA 설치 알림 애니메이션 */
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        /* PWA 설치 버튼 호버 효과 */
+        #install-btn:hover {
+            background: rgba(255,255,255,0.3) !important;
+            transform: scale(1.05);
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- PWA 상태바 -->
+    <div class="status-bar">
+        <div class="status-text" id="status-text">📱 가족 시간표 로딩 중...</div>
+        <button class="refresh-btn" onclick="refreshSchedule()">🔄</button>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>👨‍👩‍👧‍👦 우리 가족 시간표</h1>
+            <div class="week-info" id="week-info">
+                <div class="current-week" id="current-week">2025년 9월 1일 ~ 9월 7일</div>
+                <div class="week-navigation">
+                    <button class="week-nav-btn" id="prev-week" onclick="changeWeek(-1)">◀ 이전 주</button>
+                    <button class="week-nav-btn" id="next-week" onclick="changeWeek(1)">다음 주 ▶</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 주간 메모 & 준비사항 -->
+        <div class="memo-guide" id="memo-guide">
+            <h3>📝 주간 메모 & 준비사항</h3>
+            <div id="memo-content">로딩 중...</div>
+        </div>
+            
+        <!-- 가족 구성원 색상 범례 -->
+        <div class="legend">
+            <div class="legend-item">
+                    <div class="color-box dad-bar"></div>
+                <span>👨‍💼 아빠</span>
+                </div>
+            <div class="legend-item">
+                    <div class="color-box mom-bar"></div>
+                <span>👩‍💼 엄마</span>
+                </div>
+            <div class="legend-item">
+                    <div class="color-box child1-bar"></div>
+                <span>👦 윤빈</span>
+                </div>
+            <div class="legend-item">
+                    <div class="color-box child2-bar"></div>
+                <span>👧 윤준</span>
+                </div>
+            <div class="legend-item">
+                <div class="color-box" style="background: linear-gradient(135deg, #FF9800, #F57C00); border: 2px solid #FF5722;"></div>
+                <span>👨‍👩‍👧‍👦 가족공통</span>
+            </div>
+        </div>
+        
+        <!-- 시간표 -->
+        <div class="timetable" id="timetable">
+            <!-- 시간표 내용이 여기에 동적으로 생성됩니다 -->
+        </div>
+        
+        <div class="export-info">
+            <strong>📱 4등분 고정 레이아웃 시간표</strong><br>
+            • 각 가족 구성원은 항상 같은 위치(칸)에 배치<br>
+            • 30분 단위 정확한 시간 관리<br>
+            • 연속성이 유지되어 더욱 보기 쉬움<br>
+            • Google Sheets와 실시간 동기화<br>
+            <strong>업데이트: <span id="update-time">로딩 중...</span></strong>
+                        </div>
+                        </div>
+
+    <script>
+        // Google Sheets API 설정
+        const GOOGLE_SHEETS_API_KEY = 'AIzaSyB1hBonIutQtlTPjOFJe-jD94jq0hETn0A';
+        const SPREADSHEET_ID = '12PFdelBBPZzNbGW654fSf8-RG8fcRBNLKTpeyjG28Nc';
+        const RANGE = '시트1!A:M'; // 13개 컬럼 (Date 필드 포함)
+
+        // 현재 주 설정 (주간 이동 기능) - 첫 번째 반복 일정 주간으로 초기화
+        let currentWeek = new Date('2025-09-01'); // 첫 번째 반복일(9월 2일) 포함 주간
+        console.log('🚀 초기 currentWeek 설정 (첫 번째 반복 일정 주간):', currentWeek.toDateString());
+        
+        // 가족 구성원 설정
+        const familyMembers = ['아빠', '엄마', '윤빈', '윤준'];
+        const memberColors = {
+            '아빠': 'dad-bar',
+            '엄마': 'mom-bar',
+            '윤빈': 'child1-bar',
+            '윤준': 'child2-bar',
+            '가족공통': 'family-common'
+        };
+
+        const memberIcons = {
+            '아빠': '👨‍💼',
+            '엄마': '👩‍💼',
+            '윤빈': '👦',
+            '윤준': '👧',
+            '가족공통': '👨‍👩‍👧‍👦'
+        };
+
+        // 시간 슬롯 생성 (6:00-21:30, 30분 단위)
+        function generateTimeSlots() {
+            const timeSlots = [];
+            for (let hour = 6; hour <= 21; hour++) {
+                timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
+                if (hour < 21) {
+                    timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
+                }
+            }
+            timeSlots.push('21:30');
+            return timeSlots;
+        }
+
+        // 시간을 슬롯 번호로 변환
+        function timeToSlot(timeStr) {
+            if (!timeStr || timeStr === 'nan') return null;
+            
+            try {
+                // 시간 형식 정규화 (7:30 -> 07:30)
+                let normalizedTime = timeStr;
+                if (timeStr.match(/^\d{1,2}:\d{2}$/)) {
+                    const [hours, minutes] = timeStr.split(':');
+                    normalizedTime = `${hours.padStart(2, '0')}:${minutes}`;
+                }
+                
+                const [hour, minute] = normalizedTime.split(':').map(Number);
+                return (hour - 6) * 2 + (minute >= 30 ? 1 : 0);
+            } catch {
+                return null;
+            }
+        }
+
+        // 주간 이동 함수 (안전한 DOM 조작)
+        function changeWeek(direction) {
+            try {
+                console.log('🔄 주간 이동 시도:', direction > 0 ? '다음 주' : '이전 주');
+                
+                // 새로운 Date 객체 생성 (원본 변경 방지)
+                const newWeek = new Date(currentWeek);
+                newWeek.setDate(newWeek.getDate() + (direction * 7));
+                currentWeek = newWeek;
+                
+                console.log('✅ currentWeek 업데이트됨:', currentWeek.toDateString());
+                
+                // 주간 표시 업데이트
+                updateWeekDisplay();
+                
+                // 시간표 새로고침
+                if (typeof updateTimetable === 'function') {
+                    updateTimetable();
+                    console.log('✅ 시간표 업데이트 완료');
+                } else {
+                    console.warn('⚠️ updateTimetable 함수를 찾을 수 없음');
+                }
+                
+            } catch (error) {
+                console.error('❌ changeWeek 오류:', error);
+            }
+        }
+        
+        // 주간 표시 업데이트 (안전한 DOM 조작)
+        function updateWeekDisplay() {
+            try {
+                const startOfWeek = new Date(currentWeek);
+                const endOfWeek = new Date(currentWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                
+                const weekText = `${startOfWeek.getFullYear()}년 ${startOfWeek.getMonth() + 1}월 ${startOfWeek.getDate()}일 ~ ${endOfWeek.getMonth() + 1}월 ${endOfWeek.getDate()}일`;
+                
+                console.log('🔄 주간 표시 업데이트:', weekText);
+                
+                // current-week 요소 업데이트
+                const currentWeekElement = document.getElementById('current-week');
+                if (currentWeekElement) {
+                    currentWeekElement.textContent = weekText;
+                    console.log('✅ current-week 업데이트 완료');
+                } else {
+                    console.warn('⚠️ current-week 요소를 찾을 수 없음');
+                }
+                
+                // 이전/다음 주 버튼 상태 업데이트
+                const today = new Date();
+                const todayWeek = new Date(today);
+                todayWeek.setDate(today.getDate() - today.getDay() + 1);
+                
+                const weeksDiff = Math.floor((currentWeek - todayWeek) / (7 * 24 * 60 * 60 * 1000));
+                
+                const prevWeekBtn = document.getElementById('prev-week');
+                const nextWeekBtn = document.getElementById('next-week');
+                
+                if (prevWeekBtn) {
+                    prevWeekBtn.disabled = weeksDiff <= -4; // 4주 이전까지만
+                    console.log('✅ prev-week 버튼 상태 업데이트 완료');
+                } else {
+                    console.warn('⚠️ prev-week 버튼을 찾을 수 없음');
+                }
+                
+                if (nextWeekBtn) {
+                    nextWeekBtn.disabled = weeksDiff >= 4;  // 4주 이후까지만
+                    console.log('✅ next-week 버튼 상태 업데이트 완료');
+                } else {
+                    console.warn('⚠️ next-week 버튼을 찾을 수 없음');
+                }
+                
+                // 주간 네비게이션 버튼들을 보이게 만들기
+                const weekNavigation = document.querySelector('.week-navigation');
+                if (weekNavigation) {
+                    weekNavigation.style.display = 'flex';
+                    console.log('✅ 주간 네비게이션 표시됨');
+                } else {
+                    console.warn('⚠️ week-navigation 요소를 찾을 수 없음');
+                }
+                
+            } catch (error) {
+                console.error('❌ updateWeekDisplay 오류:', error);
+            }
+        }
+        
+        // 텍스트를 여러 칸에 나누어 표시
+        function splitTextForSlots(text, slotCount) {
+            if (slotCount <= 1) return [text];
+            
+            const words = text.split(' ');
+            
+            if (words.length === 1) {
+                const chars = text.split('');
+                if (chars.length <= slotCount) {
+                    return chars.concat(Array(slotCount - chars.length).fill(''));
+                } else {
+                    const charsPerSlot = Math.floor(chars.length / slotCount);
+                    const remainder = chars.length % slotCount;
+                    const result = [];
+                    let start = 0;
+                    
+                    for (let i = 0; i < slotCount; i++) {
+                        const end = start + charsPerSlot + (i < remainder ? 1 : 0);
+                        result.push(chars.slice(start, end).join(''));
+                        start = end;
+                    }
+                    return result;
+                }
+            } else if (words.length <= slotCount) {
+                const result = [];
+                for (let i = 0; i < slotCount; i++) {
+                    result.push(i < words.length ? words[i] : '');
+                }
+                return result;
+            } else {
+                const wordsPerSlot = Math.floor(words.length / slotCount);
+                const remainder = words.length % slotCount;
+                const result = [];
+                let start = 0;
+                
+                for (let i = 0; i < slotCount; i++) {
+                    const end = start + wordsPerSlot + (i < remainder ? 1 : 0);
+                    result.push(words.slice(start, end).join(' '));
+                    start = end;
+                }
+                return result;
+            }
+        }
+
+        // Google Sheets에서 데이터 가져오기 (API v4 사용)
+        async function fetchScheduleData() {
+            try {
+                const statusText = document.getElementById('status-text');
+                statusText.textContent = '📡 Google Sheets 데이터 요청 중...';
+                statusText.className = 'status-text status-warning';
+
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${RANGE}?key=${GOOGLE_SHEETS_API_KEY}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.values || data.values.length === 0) {
+                    throw new Error('시트가 비어있습니다');
+                }
+                
+                // 헤더 제거하고 데이터만 사용
+                const scheduleData = data.values.slice(1);
+                
+                statusText.textContent = `✅ Google Sheets 데이터 로드 완료: ${scheduleData.length}개 일정`;
+                statusText.className = 'status-text status-success';
+                
+                return scheduleData;
+            } catch (error) {
+                console.error('Google Sheets 데이터 로드 실패:', error);
+                const statusText = document.getElementById('status-text');
+                statusText.textContent = `❌ 데이터 로드 실패: ${error.message}`;
+                statusText.className = 'status-text status-error';
+                return [];
+            }
+        }
+
+        // 일정 데이터를 시간표 형식으로 변환
+        function processScheduleData(scheduleData) {
+            const schedule = {};
+            const memberMemos = { '아빠': {}, '엄마': {}, '윤빈': {}, '윤준': {}, '가족공통': {} };
+            
+            // 🚨 반복 일정 중복 방지를 위한 Set
+            const processedRepeatingEvents = new Set();
+            
+            // 영어 요일을 한국어 요일로 변환
+            const dayMapping = {
+                'monday': '월요일',
+                'tuesday': '화요일', 
+                'wednesday': '수요일',
+                'thursday': '목요일',
+                'friday': '금요일',
+                'saturday': '토요일',
+                'sunday': '일요일'
+            };
+            
+            scheduleData.forEach(row => {
+                try {
+                    if (row.length < 13) return; // 13개 컬럼 (Date 필드 포함)
+                    
+                    const [id, title, member, participants, dayFromSheet, date, startTime, endTime, category, priority, repeat, memo, created] = row;
+                    
+                    console.log(`🔍 처리 중: ${title} (${member}) - ${dayFromSheet} ${startTime}-${endTime} - Date: ${date} - 메모: "${memo}"`);
+                    
+                    if (!title || !dayFromSheet || !startTime || !endTime) {
+                        console.log(`❌ 필수 데이터 누락: ${title}`);
+                        return;
+                    }
+                    
+                    // 🚀 반복 일정과 단일 일정을 구분하여 처리
+                    // 1. 반복 일정: Day 필드(요일)를 기준으로 현재 주에 해당 요일이 있는지 확인
+                    // 2. 단일 일정: Date 필드를 기준으로 현재 주에 포함되는지 확인
+                    
+                    const koreanDay = dayMapping[dayFromSheet.toLowerCase()];
+                    if (!koreanDay) {
+                        console.log(`❌ 요일 변환 실패: ${dayFromSheet}`);
+                        return;
+                    }
+                    
+                    // 반복 일정인지 확인 (Repeat 필드가 '없음'이 아니고, 실제 반복 설정이 있는 경우만)
+                    const isRepeatingEvent = repeat && repeat !== 'nan' && repeat.trim() !== '' && repeat.trim() !== '없음';
+                    
+                    if (isRepeatingEvent) {
+                        // 🔄 반복 일정: 요일 기반으로 처리 + 날짜 범위 체크
+                        console.log(`🔄 반복 일정 처리: ${title} (${koreanDay}) - Date: ${date}`);
+                        
+                        // 🚨 반복 일정 중복 방지: ID 기준으로 처리 (각 반복 일정은 고유 ID 보유)
+                        const eventKey = `${id}`; // ID만으로 중복 체크 (각 반복 일정은 고유 ID)
+                        if (processedRepeatingEvents.has(eventKey)) {
+                            console.log(`⏭️ 반복 일정 중복 건너뛰기: ${title} (${koreanDay}) - ID: ${id}`);
+                            return;
+                        }
+                        processedRepeatingEvents.add(eventKey);
+                        
+                        // 1️⃣ Date 필드가 있으면 해당 날짜를 기준으로 체크 (이미 계산된 반복 일정)
+                        if (date && date !== 'nan' && date.toString().trim() !== '') {
+                            try {
+                                const eventDate = new Date(date);
+                                const currentWeekStart = new Date(currentWeek);
+                                const currentWeekEnd = new Date(currentWeek);
+                                currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+                                
+                                // 🚨 반복 일정 유효 범위 체크 (첫 번째 올바른 반복일 기준)
+                                // 시작일(8월 27일, 수요일) 이후 첫 번째 화요일 = 9월 2일
+                                const validRepeatStartDate = new Date('2025-09-02'); // 첫 번째 올바른 반복일
+                                const validRepeatEndDate = new Date('2025-11-20');
+                                
+                                if (eventDate < validRepeatStartDate) {
+                                    console.log(`❌ 반복 일정(날짜 기준) 제외: ${title} (${date}) - 유효 반복 범위 이전 (${validRepeatStartDate.toDateString()} 이전)`);
+                                    return;
+                                } else if (eventDate > validRepeatEndDate) {
+                                    console.log(`❌ 반복 일정(날짜 기준) 제외: ${title} (${date}) - 유효 반복 범위 이후 (${validRepeatEndDate.toDateString()} 이후)`);
+                                    return;
+                                }
+                                
+                                // 현재 주 범위에 포함되지 않는 일정은 제외
+                                if (eventDate < currentWeekStart || eventDate > currentWeekEnd) {
+                                    console.log(`❌ 반복 일정(날짜 기준) 제외: ${title} (${date}) - 현재 주: ${currentWeekStart.toDateString()} ~ ${currentWeekEnd.toDateString()}`);
+                                    return;
+                                } else {
+                                    console.log(`✅ 반복 일정(날짜 기준) 포함: ${title} (${date}) - 현재 주: ${currentWeekStart.toDateString()} ~ ${currentWeekEnd.toDateString()}`);
+                                }
+                            } catch (error) {
+                                console.warn(`⚠️ 반복 일정 날짜 파싱 실패: ${date}`, error);
+                                return;
+                            }
+                        } else {
+                            // 2️⃣ Date 필드가 없으면 요일 기준 + 반복 범위 체크
+                            const currentWeekStart = new Date(currentWeek);
+                            const currentWeekEnd = new Date(currentWeek);
+                            currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+                            
+                            // 요일을 숫자로 변환 (0=일요일, 1=월요일, ..., 6=토요일)
+                            const dayNumbers = { '월요일': 1, '화요일': 2, '수요일': 3, '목요일': 4, '금요일': 5, '토요일': 6, '일요일': 0 };
+                            const eventDayNumber = dayNumbers[koreanDay];
+                            
+                            if (eventDayNumber !== undefined) {
+                                // 현재 주의 해당 요일 날짜 계산
+                                const currentDay = new Date(currentWeek);
+                                currentDay.setDate(currentWeek.getDate() + eventDayNumber - 1);
+                                
+                                // 반복 일정 범위 설정 (Manager와 동일한 범위)
+                                const repeatStartDate = new Date('2025-09-02'); // 첫 번째 올바른 반복일
+                                const repeatEndDate = new Date('2025-11-20');
+                                
+                                // 현재 주의 해당 요일이 반복 범위 내에 있는지 체크
+                                if (currentDay >= repeatStartDate && currentDay <= repeatEndDate && 
+                                    currentDay >= currentWeekStart && currentDay <= currentWeekEnd) {
+                                    console.log(`✅ 반복 일정(요일 기준) 포함: ${title} (${koreanDay}) - ${currentDay.toDateString()} - 반복 범위 내`);
+                                } else {
+                                    if (currentDay < repeatStartDate || currentDay > repeatEndDate) {
+                                        console.log(`❌ 반복 일정(요일 기준) 제외: ${title} (${koreanDay}) - ${currentDay.toDateString()} - 반복 범위 밖 (${repeatStartDate.toDateString()} ~ ${repeatEndDate.toDateString()})`);
+                                    } else {
+                                        console.log(`❌ 반복 일정(요일 기준) 제외: ${title} (${koreanDay}) - ${currentDay.toDateString()} - 현재 주 범위 밖`);
+                                    }
+                                    return;
+                                }
+                            }
+                        }
+                    } else {
+                        // 📅 단일 일정: Date 필드 기반으로 처리
+                        if (date && date !== 'nan' && date.toString().trim() !== '') {
+                            try {
+                                const eventDate = new Date(date);
+                                const currentWeekStart = new Date(currentWeek);
+                                const currentWeekEnd = new Date(currentWeek);
+                                currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+                                
+                                // 현재 주 범위에 포함되지 않는 일정은 제외
+                                if (eventDate < currentWeekStart || eventDate > currentWeekEnd) {
+                                    console.log(`❌ 단일 일정 제외: ${title} (${date}) - 현재 주: ${currentWeekStart.toDateString()} ~ ${currentWeekEnd.toDateString()}`);
+                                    return;
+                                } else {
+                                    console.log(`✅ 단일 일정 포함: ${title} (${date}) - 현재 주: ${currentWeekStart.toDateString()} ~ ${currentWeekEnd.toDateString()}`);
+                                }
+                    } catch (error) {
+                                console.warn(`⚠️ 날짜 파싱 실패: ${date}`, error);
+                                return;
+                            }
+                        } else {
+                            console.log(`⚠️ 단일 일정인데 Date 필드 없음: ${title}`);
+                            return;
+                        }
+                    }
+                    
+                    console.log(`✅ 일정 포함: ${title} (${koreanDay}) - Date: ${date}`);
+                    
+                    // 영어 요일을 한국어로 변환 (이미 위에서 처리됨)
+                    
+                    console.log(`✅ 일정 포함: ${title} (${koreanDay}) - Date: ${date}`);
+                    
+                    const startSlot = timeToSlot(startTime);
+                    const endSlot = timeToSlot(endTime);
+                    
+                    if (startSlot === null || endSlot === null) {
+                        console.log(`❌ 시간 슬롯 변환 실패: ${startTime} -> ${startSlot}, ${endTime} -> ${endSlot}`);
+                        return;
+                    }
+                    
+                    console.log(`✅ 슬롯 변환 성공: ${startTime}(${startSlot}) - ${endTime}(${endSlot})`);
+                    
+                    // 메모 수집 (빈 문자열도 처리)
+                    if (memo && memo !== 'nan' && memo.trim() !== '') {
+                        console.log(`📝 메모 발견: ${member} - ${koreanDay} - "${memo}"`);
+                        
+                        // 가족공통 메모는 가족공통에게만 추가
+                        if (member === '가족공통') {
+                            if (!memberMemos['가족공통'][koreanDay]) {
+                                memberMemos['가족공통'][koreanDay] = [];
+                            }
+                            memberMemos['가족공통'][koreanDay].push(memo);
+                            console.log(`👨‍👩‍👧‍👦 가족공통 메모 추가: 가족공통 - ${koreanDay}`);
+                        } else if (member in memberMemos) {
+                            if (!memberMemos[member][koreanDay]) {
+                                memberMemos[member][koreanDay] = [];
+                            }
+                            memberMemos[member][koreanDay].push(memo);
+                            console.log(`✅ 개인 메모 추가: ${member} - ${koreanDay} - "${memo}"`);
+                        }
+                    } else {
+                        console.log(`📝 메모 없음: ${member} - ${koreanDay}`);
+                    }
+                    
+                    // 참석자 정보 처리
+                    let mainPerson = member;
+                    let membersToAdd = [member];
+                    
+                    if (member === '가족공통') {
+                        mainPerson = '가족공통';
+                        membersToAdd = familyMembers;
+                    } else if (participants && participants !== 'nan') {
+                        const participantList = participants.split(',').map(p => p.trim());
+                        if (participantList.length > 1) {
+                            membersToAdd = participantList;
+                        }
+                    }
+                    
+                    const duration = endSlot - startSlot;
+                    const splitTexts = splitTextForSlots(title, duration);
+                    
+                    membersToAdd.forEach(memberName => {
+                        if (familyMembers.includes(memberName) || memberName === '가족공통') {
+                            for (let slot = startSlot; slot < endSlot; slot++) {
+                                if (slot < 0) continue;
+                                
+                                if (!schedule[koreanDay]) schedule[koreanDay] = {};
+                                if (!schedule[koreanDay][slot]) schedule[koreanDay][slot] = {};
+                                
+                                const barType = slot === startSlot && slot === endSlot - 1 ? 'single' :
+                                              slot === startSlot ? 'start' :
+                                              slot === endSlot - 1 ? 'end' : 'middle';
+                                
+                                const slotPosition = slot - startSlot;
+                                const slotText = splitTexts[slotPosition] || '';
+                                
+                                schedule[koreanDay][slot][memberName] = {
+                                    title: title,
+                                    slotText: slotText,
+                                    person: member,
+                                    mainPerson: mainPerson,
+                                    participants: participants,
+                                    class: getEventColorClass(mainPerson, participants),
+                                    barType: barType,
+                                    duration: duration,
+                                    isFamily: member === '가족공통',
+                                    isMulti: participants && participants !== 'nan' && participants.split(',').length > 1
+                                };
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('일정 처리 오류:', error);
+                }
+            });
+            
+            return { schedule, memberMemos };
+        }
+
+        // 일정 색상 클래스 결정
+        function getEventColorClass(mainPerson, participants) {
+            if (mainPerson === '가족공통') {
+                return 'family-common';
+            } else if (participants && participants !== 'nan' && participants.split(',').length > 1) {
+                return 'multi-participant';
+                    } else {
+                return memberColors[mainPerson] || 'dad-bar';
+            }
+        }
+
+        // 시간표 HTML 생성
+        function generateTimetableHTML(schedule, memberMemos) {
+            const timeSlots = generateTimeSlots();
+            const days = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
+            const dayAbbr = ['월', '화', '수', '목', '금', '토', '일'];
+            
+            // 헤더 생성 (currentWeek 사용)
+            const monday = new Date(currentWeek);
+            
+            let headerRow = '<tr><th class="time-col">시간</th>';
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                headerRow += `<th>${days[i]}<br><small>${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}</small></th>`;
+            }
+            headerRow += '</tr>';
+            
+            // 시간표 행 생성
+            let tableRows = '';
+            timeSlots.forEach((timeStr, slotIdx) => {
+                const isHour = timeStr.endsWith(':00');
+                const hourClass = isHour ? 'hour-line' : '';
+                const timeDisplay = isHour ? `<strong>${timeStr}</strong>` : timeStr;
+                
+                let rowHtml = `<tr><td class="time-col ${hourClass}">${timeDisplay}</td>`;
+                
+                for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+                    const currentDay = days[dayIdx];
+                    let cellContent = '<div class="time-slot">';
+                    
+                    // 4개 고정 칸 생성
+                    familyMembers.forEach((member, i) => {
+                        const leftPosition = `${i * 25}%`;
+                        const width = "24%";
+                        
+                        const event = schedule[currentDay] && schedule[currentDay][slotIdx] && schedule[currentDay][slotIdx][member];
+                        
+                        if (event) {
+                            const duration = event.duration;
+                            const slotText = event.slotText;
+                            
+                            let textSpan = '';
+                            if (slotText.trim()) {
+                                textSpan = `<span class="event-text large-text" style="font-size: 13px;">${slotText}</span>`;
+                            }
+                            
+                            let specialClass = '';
+                            if (event.isFamily) {
+                                specialClass = 'family-common';
+                            } else if (event.isMulti) {
+                                specialClass = 'multi-participant';
+                            }
+                            
+                            cellContent += `
+                            <div class="event-bar ${event.class} bar-${event.barType} ${specialClass}" 
+                                 style="left: ${leftPosition}; width: ${width};"
+                                 data-member="${member}"
+                                 data-duration="${duration}">
+                                ${textSpan}
+                            </div>`;
+                        } else {
+                            cellContent += `
+                            <div class="empty-slot" 
+                                 style="left: ${leftPosition}; width: ${width};"
+                                 data-member="${member}">
+                            </div>`;
+                        }
+                    });
+                    
+                    cellContent += '</div>';
+                    rowHtml += `<td>${cellContent}</td>`;
+                }
+                
+                rowHtml += '</tr>';
+                tableRows += rowHtml;
+            });
+            
+            return { headerRow, tableRows };
+        }
+
+        // 주간 메모 생성
+        function generateWeeklyMemo(memberMemos) {
+            let memoHtml = '';
+            
+            // 가족공통 메모 먼저 표시
+            if (memberMemos['가족공통']) {
+                const icon = '👨‍👩‍👧‍👦';
+                const colorClass = 'family-common';
+                
+                const memoItems = [];
+                const days = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
+                
+                days.forEach(day => {
+                    if (memberMemos['가족공통'][day] && memberMemos['가족공통'][day].length > 0) {
+                        const uniqueMemos = [...new Set(memberMemos['가족공통'][day])];
+                        let memoText = uniqueMemos[0].substring(0, 30);
+                        
+                        // 단어 단위로 자연스럽게 자르기 (25자에서 단어 경계)
+                        if (memoText.length >= 25) {
+                            const lastSpace = memoText.lastIndexOf(' ', 25);
+                            if (lastSpace > 15) {
+                                memoText = memoText.substring(0, lastSpace) + "..";
+                            } else {
+                                memoText = memoText.substring(0, 25) + "..";
+                            }
+                        }
+                        
+                        // 요일 표시 단축: "목요일:" → "목:"
+                        const shortDay = day.substring(0, 1);
+                        memoItems.push(`${shortDay}: ${memoText}`);
+                    }
+                });
+                
+                const displayMemos = memoItems.slice(0, 4); // 3개 → 4개로 증가
+                if (memoItems.length > 4) {
+                    displayMemos.push(`외 ${memoItems.length - 4}개`);
+                }
+                
+                // "• " 구분자로 변경하고 줄바꿈 추가
+                const memoText = displayMemos.length > 0 ? displayMemos.map(memo => `• ${memo}`).join("<br>") : "📌 특별 준비사항 없음";
+                
+                memoHtml += `
+                <div class="member-memo">
+                    <div class="memo-header">
+                        <div class="color-box ${colorClass}"></div>
+                        <span class="member-name">${icon} 가족공통</span>
+                    </div>
+                    <div class="memo-content">${memoText}</div>
+                </div>`;
+            }
+            
+            familyMembers.forEach(member => {
+                const icon = memberIcons[member];
+                const colorClass = memberColors[member];
+                
+                const memoItems = [];
+                const days = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
+                
+                days.forEach(day => {
+                    if (memberMemos[member][day] && memberMemos[member][day].length > 0) {
+                        const uniqueMemos = [...new Set(memberMemos[member][day])];
+                        const familyMemo = uniqueMemos.find(memo => memo.includes('[가족]'));
+                        
+                        let memoText;
+                        if (familyMemo) {
+                            memoText = familyMemo.replace('[가족] ', '').substring(0, 30);
+                        } else {
+                            memoText = uniqueMemos[0].substring(0, 30);
+                        }
+                        
+                        // 단어 단위로 자연스럽게 자르기 (25자에서 단어 경계)
+                        if (memoText.length >= 25) {
+                            const lastSpace = memoText.lastIndexOf(' ', 25);
+                            if (lastSpace > 15) {
+                                memoText = memoText.substring(0, lastSpace) + "..";
+                            } else {
+                                memoText = memoText.substring(0, 25) + "..";
+                            }
+                        }
+                        
+                        // 요일 표시 단축: "목요일:" → "목:"
+                        const shortDay = day.substring(0, 1);
+                        memoItems.push(`${shortDay}: ${memoText}`);
+                    }
+                });
+                
+                const displayMemos = memoItems.slice(0, 4); // 3개 → 4개로 증가
+                if (memoItems.length > 4) {
+                    displayMemos.push(`외 ${memoItems.length - 4}개`);
+                }
+                
+                // "• " 구분자로 변경하고 줄바꿈 추가
+                const memoText = displayMemos.length > 0 ? displayMemos.map(memo => `• ${memo}`).join("<br>") : "📌 특별 준비사항 없음";
+                
+                memoHtml += `
+                <div class="member-memo">
+                    <div class="memo-header">
+                        <div class="color-box ${colorClass}"></div>
+                        <span class="member-name">${icon} ${member}</span>
+                    </div>
+                    <div class="memo-content">${memoText}</div>
+                </div>`;
+            });
+            
+            return memoHtml;
+        }
+
+        // 시간표 업데이트 (안전한 DOM 조작)
+        async function updateTimetable() {
+            try {
+                console.log('🔄 시간표 업데이트 시작...');
+                
+                const scheduleData = await fetchScheduleData();
+                if (scheduleData.length === 0) {
+                    throw new Error('데이터가 없습니다');
+                }
+                
+                console.log(`📊 ${scheduleData.length}개의 일정 데이터 로드됨`);
+                
+                const { schedule, memberMemos } = processScheduleData(scheduleData);
+                console.log('✅ 일정 데이터 처리 완료');
+                
+                const { headerRow, tableRows } = generateTimetableHTML(schedule, memberMemos);
+                const memoHtml = generateWeeklyMemo(memberMemos);
+                
+                // DOM 업데이트 (안전한 조작)
+                const timetableElement = document.getElementById('timetable');
+                if (timetableElement) {
+                    timetableElement.innerHTML = `
+                        <table>
+                            <thead>${headerRow}</thead>
+                            <tbody>${tableRows}</tbody>
+                        </table>
+                    `;
+                    console.log('✅ 시간표 DOM 업데이트 완료');
+                } else {
+                    console.warn('⚠️ timetable 요소를 찾을 수 없음');
+                }
+                
+                const memoContentElement = document.getElementById('memo-content');
+                if (memoContentElement) {
+                    memoContentElement.innerHTML = memoHtml;
+                    console.log('✅ 메모 DOM 업데이트 완료');
+                } else {
+                    console.warn('⚠️ memo-content 요소를 찾을 수 없음');
+                }
+                
+                // 주간 정보 업데이트 (currentWeek 사용)
+                updateWeekDisplay();
+                
+                // 현재 시간 업데이트
+                const updateTimeElement = document.getElementById('update-time');
+                if (updateTimeElement) {
+                    const today = new Date();
+                    updateTimeElement.textContent = today.toLocaleString('ko-KR', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    console.log('✅ 업데이트 시간 표시 완료');
+                } else {
+                    console.warn('⚠️ update-time 요소를 찾을 수 없음');
+                }
+                
+                const statusText = document.getElementById('status-text');
+                if (statusText) {
+                    statusText.textContent = '✅ 시간표 업데이트 완료';
+                    statusText.className = 'status-text status-success';
+                    
+                    setTimeout(() => {
+                        statusText.textContent = '📱 가족 시간표';
+                        statusText.className = 'status-text';
+                    }, 2000);
+                    console.log('✅ 상태 텍스트 업데이트 완료');
+                } else {
+                    console.warn('⚠️ status-text 요소를 찾을 수 없음');
+                }
+                
+                console.log('🎉 시간표 업데이트 완료!');
+                
+            } catch (error) {
+                console.error('❌ 시간표 업데이트 실패:', error);
+                const statusText = document.getElementById('status-text');
+                if (statusText) {
+                    statusText.textContent = `❌ 업데이트 실패: ${error.message}`;
+                    statusText.className = 'status-text status-error';
+                }
+            }
+        }
+
+        // 새로고침 함수
+        function refreshSchedule() {
+            const statusText = document.getElementById('status-text');
+            statusText.textContent = '🔄 새로고침 중...';
+            statusText.className = 'status-text status-warning';
+            
+            setTimeout(() => {
+                updateTimetable();
+            }, 500);
+        }
+
+        // 페이지 로드 시 시간표 생성
+        window.addEventListener('load', () => {
+            console.log('🚀 페이지 로드됨 - 초기화 시작');
+            
+            // PWA Service Worker 등록
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('✅ PWA Service Worker 등록 완료:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('❌ PWA Service Worker 등록 실패:', error);
+                    });
+            }
+            
+            // PWA 설치 프롬프트 처리
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                console.log('📱 PWA 설치 가능!');
+                
+                // 설치 알림 표시
+                showInstallNotification();
+            });
+            
+            // 주간 표시 업데이트
+            if (typeof updateWeekDisplay === 'function') {
+                updateWeekDisplay();
+                console.log('✅ 초기 주간 표시 업데이트 완료');
+            } else {
+                console.warn('⚠️ updateWeekDisplay 함수를 찾을 수 없음');
+            }
+            
+            // 시간표 업데이트
+            if (typeof updateTimetable === 'function') {
+                updateTimetable();
+                console.log('✅ 초기 시간표 업데이트 시작');
+            } else {
+                console.warn('⚠️ updateTimetable 함수를 찾을 수 없음');
+            }
+        });
+
+        // PWA 설치 알림 표시
+        function showInstallNotification() {
+            // 이미 설치되어 있으면 표시하지 않음
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('✅ PWA 이미 설치됨');
+                return;
+            }
+            
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="
+                    position: fixed; 
+                    bottom: 20px; 
+                    left: 20px; 
+                    right: 20px; 
+                    background: #6366f1; 
+                    color: white; 
+                    padding: 15px; 
+                    border-radius: 10px; 
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    z-index: 2000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    max-width: 400px;
+                    margin: 0 auto;
+                    animation: slideUp 0.3s ease;
+                ">
+                    <div>
+                        <div style="font-weight: bold; margin-bottom: 4px;">📱 앱으로 설치하기</div>
+                        <div style="font-size: 14px; opacity: 0.9;">홈 화면에 추가해서 빠르게 접근하세요!</div>
+                    </div>
+                    <button id="install-btn" style="
+                        background: rgba(255,255,255,0.2); 
+                        border: 1px solid rgba(255,255,255,0.3); 
+                        color: white; 
+                        padding: 8px 16px; 
+                        border-radius: 6px; 
+                        cursor: pointer;
+                        font-size: 14px;
+                        font-weight: bold;
+                    ">설치</button>
+                    <button id="dismiss-btn" style="
+                        background: none; 
+                        border: none; 
+                        color: rgba(255,255,255,0.7); 
+                        cursor: pointer; 
+                        font-size: 18px;
+                        margin-left: 10px;
+                    ">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 설치 버튼 이벤트
+            document.getElementById('install-btn').addEventListener('click', () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('✅ PWA 설치 완료');
+                        }
+                        deferredPrompt = null;
+                    });
+                }
+                notification.remove();
+            });
+            
+            // 닫기 버튼 이벤트
+            document.getElementById('dismiss-btn').addEventListener('click', () => {
+                notification.remove();
+            });
+            
+            // 5초 후 자동 숨김
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 8000);
+        }
+
+        // 전역 함수로 노출
+        window.refreshSchedule = refreshSchedule;
+    </script>
+</body>
+</html>
