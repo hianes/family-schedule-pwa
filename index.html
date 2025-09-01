@@ -367,271 +367,30 @@
         }
     </style>
     
-    <!-- 🔐 가족 전용 인증 시스템 -->
+    <!-- 🔐 가족 전용 인증 시스템 (간단 버전) -->
     <script>
+        // 🔑 가족 패스워드 확인
         (function() {
-            'use strict';
-            
-            // 🔑 가족 인증 설정
             const FAMILY_PASSWORD = 'kim2024family';
             const AUTH_KEY = 'familyScheduleAuth';
-            const WELCOME_KEY = 'familyWelcomeShown';
-            const AUTH_DATE_KEY = 'familyAuthDate';
             
-            // 📱 인증 상태 확인
-            const isAuthenticated = localStorage.getItem(AUTH_KEY) === 'verified';
-            const authDate = localStorage.getItem(AUTH_DATE_KEY);
-            
-            // 🕒 6개월 후 재인증 (선택적 보안 강화)
-            const sixMonthsAgo = new Date();
-            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-            const needReauth = authDate && new Date(authDate) < sixMonthsAgo;
-            
-            if (!isAuthenticated || needReauth) {
-                // 🎨 인증 화면 스타일
-                const authStyles = `
-                    <style>
-                        .auth-container {
-                            position: fixed;
-                            top: 0;
-                            left: 0;
-                            width: 100%;
-                            height: 100%;
-                            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            z-index: 9999;
-                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                        }
-                        .auth-box {
-                            background: white;
-                            padding: 40px;
-                            border-radius: 20px;
-                            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-                            text-align: center;
-                            max-width: 400px;
-                            width: 90%;
-                            animation: slideIn 0.5s ease;
-                        }
-                        @keyframes slideIn {
-                            from {
-                                transform: translateY(-50px);
-                                opacity: 0;
-                            }
-                            to {
-                                transform: translateY(0);
-                                opacity: 1;
-                            }
-                        }
-                        .auth-title {
-                            font-size: 24px;
-                            font-weight: bold;
-                            color: #1f2937;
-                            margin-bottom: 10px;
-                        }
-                        .auth-subtitle {
-                            color: #6b7280;
-                            margin-bottom: 30px;
-                            font-size: 16px;
-                        }
-                        .auth-input {
-                            width: 100%;
-                            padding: 15px;
-                            border: 2px solid #e5e7eb;
-                            border-radius: 12px;
-                            font-size: 16px;
-                            margin-bottom: 20px;
-                            box-sizing: border-box;
-                            transition: border-color 0.3s;
-                        }
-                        .auth-input:focus {
-                            outline: none;
-                            border-color: #6366f1;
-                        }
-                        .auth-button {
-                            width: 100%;
-                            background: #6366f1;
-                            color: white;
-                            border: none;
-                            padding: 15px;
-                            border-radius: 12px;
-                            font-size: 16px;
-                            font-weight: bold;
-                            cursor: pointer;
-                            transition: background 0.3s;
-                        }
-                        .auth-button:hover {
-                            background: #5b59ed;
-                        }
-                        .auth-error {
-                            color: #ef4444;
-                            margin-top: 15px;
-                            font-size: 14px;
-                        }
-                        .lock-icon {
-                            font-size: 48px;
-                            margin-bottom: 20px;
-                        }
-                    </style>
-                `;
+            // 인증 상태 확인
+            if (localStorage.getItem(AUTH_KEY) !== 'verified') {
+                // 🔐 인증 필요
+                const password = prompt('🔐 김씨 가족 시간표\n\n가족 구성원만 접근 가능합니다.\n접근 코드를 입력하세요:');
                 
-                // 📄 인증 화면 HTML
-                const authHTML = `
-                    ${authStyles}
-                    <div class="auth-container" id="authContainer">
-                        <div class="auth-box">
-                            <div class="lock-icon">🔒</div>
-                            <div class="auth-title">김씨 가족 시간표</div>
-                            <div class="auth-subtitle">가족 구성원만 접근 가능합니다</div>
-                            <input type="password" 
-                                   class="auth-input" 
-                                   id="passwordInput" 
-                                   placeholder="가족 접근 코드를 입력하세요"
-                                   autofocus>
-                            <button class="auth-button" onclick="checkPassword()">
-                                🔐 입장하기
-                            </button>
-                            <div class="auth-error" id="errorMessage"></div>
-                        </div>
-                    </div>
-                `;
-                
-                // 📱 페이지 내용 대체
-                document.documentElement.innerHTML = `
-                    <html lang="ko">
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>🔐 가족 시간표 - 인증 필요</title>
-                        <meta name="theme-color" content="#6366f1">
-                    </head>
-                    <body>
-                        ${authHTML}
-                        <script>
-                            let attempts = 0;
-                            const maxAttempts = 5;
-                            
-                            function checkPassword() {
-                                const input = document.getElementById('passwordInput');
-                                const error = document.getElementById('errorMessage');
-                                const password = input.value;
-                                
-                                if (password === '${FAMILY_PASSWORD}') {
-                                    // ✅ 인증 성공
-                                    localStorage.setItem('${AUTH_KEY}', 'verified');
-                                    localStorage.setItem('${AUTH_DATE_KEY}', new Date().toISOString());
-                                    
-                                    // 🎉 성공 메시지
-                                    document.getElementById('authContainer').innerHTML = \`
-                                        <div class="auth-box">
-                                            <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
-                                            <div class="auth-title">환영합니다!</div>
-                                            <div class="auth-subtitle">김씨 가족 시간표로 이동합니다...</div>
-                                        </div>
-                                    \`;
-                                    
-                                    // 🔄 페이지 새로고침
-                                    setTimeout(() => {
-                                        window.location.reload();
-                                    }, 1500);
-                                    
-                                } else {
-                                    // ❌ 인증 실패
-                                    attempts++;
-                                    if (attempts >= maxAttempts) {
-                                        error.textContent = '❌ 너무 많은 시도로 인해 접근이 차단되었습니다.';
-                                        document.getElementById('passwordInput').disabled = true;
-                                        document.querySelector('.auth-button').disabled = true;
-                                    } else {
-                                        error.textContent = \`❌ 잘못된 접근 코드입니다. (\${attempts}/\${maxAttempts})\`;
-                                        input.value = '';
-                                        input.focus();
-                                    }
-                                }
-                            }
-                            
-                            // 🎹 엔터키 지원
-                            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-                                if (e.key === 'Enter') {
-                                    checkPassword();
-                                }
-                            });
-                            
-                            // 🎯 자동 포커스 (모바일 호환)
-                            setTimeout(() => {
-                                document.getElementById('passwordInput').focus();
-                            }, 500);
-                        <\/script>
-                    </body>
-                    </html>
-                `;
-                
-                // 🚫 추가 스크립트 실행 중단
-                throw new Error('Authentication required');
+                if (password === FAMILY_PASSWORD) {
+                    // ✅ 인증 성공
+                    localStorage.setItem(AUTH_KEY, 'verified');
+                    localStorage.setItem('familyAuthDate', new Date().toISOString());
+                    alert('🎉 환영합니다! 김씨 가족 시간표입니다.\n\n💡 홈 화면에 추가하여 앱처럼 사용하세요!');
+                } else {
+                    // ❌ 인증 실패
+                    alert('❌ 올바르지 않은 접근 코드입니다.\n가족 구성원만 접근할 수 있습니다.');
+                    document.body.innerHTML = '<div style="text-align:center; margin-top:20%; font-size:18px; color:#666;">접근 권한이 없습니다</div>';
+                    throw new Error('Authentication failed');
+                }
             }
-            
-            // 🎊 최초 방문자 환영 메시지
-            if (!localStorage.getItem(WELCOME_KEY)) {
-                setTimeout(() => {
-                    // 💫 환영 알림 (페이지 로드 후 실행)
-                    const showWelcome = () => {
-                        const welcomeDiv = document.createElement('div');
-                        welcomeDiv.innerHTML = `
-                            <div style="
-                                position: fixed;
-                                top: 20px;
-                                right: 20px;
-                                background: linear-gradient(135deg, #10b981, #34d399);
-                                color: white;
-                                padding: 20px;
-                                border-radius: 15px;
-                                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-                                max-width: 300px;
-                                z-index: 2000;
-                                animation: welcomeSlide 0.5s ease;
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                            ">
-                                <style>
-                                    @keyframes welcomeSlide {
-                                        from { transform: translateX(100%); opacity: 0; }
-                                        to { transform: translateX(0); opacity: 1; }
-                                    }
-                                </style>
-                                <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
-                                    🎉 김씨 가족 시간표에 오신 것을 환영합니다!
-                                </div>
-                                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 15px;">
-                                    • 📱 홈 화면에 추가하여 앱처럼 사용하세요<br>
-                                    • 🔄 새로고침 버튼으로 최신 일정 확인<br>
-                                    • 🏠 가족 모두가 실시간으로 공유합니다
-                                </div>
-                                <button onclick="this.parentElement.remove(); localStorage.setItem('${WELCOME_KEY}', 'true');" 
-                                        style="
-                                            background: rgba(255,255,255,0.2);
-                                            border: none;
-                                            color: white;
-                                            padding: 8px 16px;
-                                            border-radius: 8px;
-                                            cursor: pointer;
-                                            font-size: 14px;
-                                        ">
-                                    확인 👍
-                                </button>
-                            </div>
-                        `;
-                        document.body.appendChild(welcomeDiv);
-                    };
-                    
-                    // DOM이 준비된 후 환영 메시지 표시
-                    if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', showWelcome);
-                    } else {
-                        showWelcome();
-                    }
-                }, 2000);
-            }
-            
         })();
     </script>
 </head>
