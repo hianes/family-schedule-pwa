@@ -385,10 +385,34 @@
                     localStorage.setItem('familyAuthDate', new Date().toISOString());
                     alert('🎉 환영합니다! 김씨 가족 시간표입니다.\n\n💡 홈 화면에 추가하여 앱처럼 사용하세요!');
                 } else {
-                    // ❌ 인증 실패
+                    // ❌ 인증 실패 - 완전 차단
                     alert('❌ 올바르지 않은 접근 코드입니다.\n가족 구성원만 접근할 수 있습니다.');
-                    document.body.innerHTML = '<div style="text-align:center; margin-top:20%; font-size:18px; color:#666;">접근 권한이 없습니다</div>';
-                    throw new Error('Authentication failed');
+                    
+                    // 🚫 페이지 완전 차단
+                    document.documentElement.innerHTML = `
+                        <html>
+                        <head><title>접근 차단</title></head>
+                        <body style="
+                            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            height: 100vh;
+                            margin: 0;
+                            background: #f5f5f5;
+                            color: #666;
+                        ">
+                            <div style="text-align: center;">
+                                <div style="font-size: 64px; margin-bottom: 20px;">🔒</div>
+                                <h1>접근 권한이 없습니다</h1>
+                                <p>가족 구성원만 접근할 수 있습니다</p>
+                            </div>
+                        </body>
+                        </html>
+                    `;
+                    
+                    // 🛑 스크립트 완전 중단
+                    while(true) { /* 무한 루프로 추가 실행 방지 */ }
                 }
             }
         })();
