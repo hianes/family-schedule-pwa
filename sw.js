@@ -1,5 +1,5 @@
 // 가족 시간표 PWA Service Worker
-const CACHE_NAME = 'family-schedule-v3.0';
+const CACHE_NAME = 'family-schedule-v3.1';  // 🔄 캐시 버전 업데이트
 const CACHE_URLS = [
   './index.html',           // 📱 PWA 메인 앱
   './manifest.json',        // 🔧 PWA 설정  

@@ -371,8 +371,16 @@
     <script>
         // 🔑 가족 패스워드 확인
         (function() {
+            // 🧹 기존 캐시 완전 삭제 (강제 업데이트)
+            localStorage.removeItem('familyScheduleAuth');        // 기존 키 삭제
+            sessionStorage.clear();                               // 세션 정리
+            
             const FAMILY_PASSWORD = 'kim2025sep';  // 🔄 새 패스워드
-            const AUTH_KEY = 'familyAuth_v2';      // 🔄 새 저장 키 (기존 인증 무효화)
+            const AUTH_KEY = 'familyAuth_v3';      // 🔄 다시 새 저장 키 (강제 재인증)
+            
+            // 🔍 디버그 정보 (Console에서 확인 가능)
+            console.log('🔐 인증 시스템 v3 로드됨');
+            console.log('📅 로드 시간:', new Date().toLocaleString());
             
             // 인증 상태 확인
             if (localStorage.getItem(AUTH_KEY) !== 'verified') {
