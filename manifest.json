@@ -1,6 +1,6 @@
 {
-  "name": "김씨 가족 시간표 PWA",
-  "short_name": "가족시간표",
+  "name": "우리 가족 시간표 PWA",
+  "short_name": "우리가족시간표",
   "description": "우리 가족의 주간 시간표 - PWA 앱으로 업그레이드",
   "start_url": "./index.html",
   "display": "standalone",

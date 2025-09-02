@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>👨‍👩‍👧‍👦 가족 시간표 - 실시간 동기화</title>
+    <title>👨‍👩‍👧‍👦 우리 가족 시간표 - 실시간 동기화</title>
     
     <!-- PWA Meta Tags -->
     <meta name="description" content="우리 가족의 시간표 - Google Sheets와 실시간 동기화, 4등분 고정 레이아웃">
     <meta name="theme-color" content="#6366f1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="가족시간표">
+    <meta name="apple-mobile-web-app-title" content="우리가족시간표">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="./manifest.json">
@@ -377,13 +377,13 @@
             // 인증 상태 확인
             if (localStorage.getItem(AUTH_KEY) !== 'verified') {
                 // 🔐 인증 필요
-                const password = prompt('🔐 김씨 가족 시간표\n\n가족 구성원만 접근 가능합니다.\n접근 코드를 입력하세요:');
+                const password = prompt('🔐 우리 가족 시간표\n\n가족 구성원만 접근 가능합니다.\n접근 코드를 입력하세요:');
                 
                 if (password === FAMILY_PASSWORD) {
                     // ✅ 인증 성공
                     localStorage.setItem(AUTH_KEY, 'verified');
                     localStorage.setItem('familyAuthDate', new Date().toISOString());
-                    alert('🎉 환영합니다! 김씨 가족 시간표입니다.\n\n💡 홈 화면에 추가하여 앱처럼 사용하세요!');
+                    alert('🎉 환영합니다! 우리 가족 시간표입니다.\n\n💡 홈 화면에 추가하여 앱처럼 사용하세요!');
                 } else {
                     // ❌ 인증 실패 - 완전 차단
                     alert('❌ 올바르지 않은 접근 코드입니다.\n가족 구성원만 접근할 수 있습니다.');
