@@ -109,12 +109,12 @@ echo ""
 
 # 최종 URL 표시
 pwa_url="https://$github_username.github.io/$repo_name/"
-editor_url="https://$github_username.github.io/$repo_name/editor.html"
+main_editor_url="https://$github_username.github.io/$repo_name/editor.html"
 
 echo "🎉 배포 완료!"
 echo "============="
 echo "📱 PWA URL (아이폰용): $pwa_url"
-echo "🖥️ 편집기 URL (PC용): $editor_url"
+echo "🖥️ 메인 에디터 URL (PC용): $main_editor_url"
 echo ""
 echo "📋 다음 단계:"
 echo "1. Google Sheets API 설정 (SETUP_GUIDE.md 참고)"
